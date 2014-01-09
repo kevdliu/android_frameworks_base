@@ -1006,6 +1006,8 @@ public class Halo extends FrameLayout implements Ticker.TickerCallback {
         }
 
         public void ticker(String tickerText, int delay, int startDuration) {
+            setTriggerTouchable(true);
+            
             if (tickerText == null || tickerText.equals("")) {
                 killTicker();
                 return;
@@ -1028,7 +1030,8 @@ public class Halo extends FrameLayout implements Ticker.TickerCallback {
         }
 
         public void ticker(int delay, int startDuration) {
-
+            setTriggerTouchable(true);
+            
             setHaloContentHeight(mContext.getResources().getDimensionPixelSize(R.dimen.notification_min_height));
             mHaloTickerContent.setVisibility(View.VISIBLE);
             mHaloTextView.setVisibility(View.GONE);
@@ -1057,6 +1060,8 @@ public class Halo extends FrameLayout implements Ticker.TickerCallback {
 
             mHandler.postDelayed(new Runnable() {
                 public void run() {
+                    setTriggerTouchable(true);
+                    
                     mPingAllowed = false;
 
                     mPingX = mHaloX + mIconHalfSize;
@@ -1086,6 +1091,7 @@ public class Halo extends FrameLayout implements Ticker.TickerCallback {
         CustomObjectAnimator snapAnimator = new CustomObjectAnimator(this);
 
         public void wake() {
+            setTriggerTouchable(true);
             unscheduleSleep();
             if (mState == STATE_HIDDEN || mState == STATE_SILENT) mState = STATE_IDLE;
             int newPos = mTickerLeft ? 0 : mScreenWidth - mIconSize;
@@ -1107,6 +1113,7 @@ public class Halo extends FrameLayout implements Ticker.TickerCallback {
             if (mNinjaMode && getHaloMsgCount()-getHidden() < 1) {
                 newPos = mTickerLeft ? -mIconSize : mScreenWidth;
                 triggerWidth = (int)(mTickerLeft ? -mIconSize*0.8f : mScreenWidth - mIconSize*0.2f);
+                setTriggerTouchable(false);
             } else {
                 newPos = mTickerLeft ? -mIconHalfSize : mScreenWidth - mIconHalfSize;
                 triggerWidth = newPos;
@@ -1136,6 +1143,9 @@ public class Halo extends FrameLayout implements Ticker.TickerCallback {
             int newPos;
             if (mNinjaMode && getHaloMsgCount()-getHidden() < 1) {
                 newPos = mTickerLeft ? -mIconSize : mScreenWidth;
+                if (!silent) {
+                    setTriggerTouchable(false);
+                }
             } else {
                 newPos = (int)(mTickerLeft ? -mIconSize*0.8f : mScreenWidth - mIconSize*0.2f);
             }
@@ -1150,6 +1160,22 @@ public class Halo extends FrameLayout implements Ticker.TickerCallback {
 
         public void unscheduleSleep() {
             snapAnimator.cancel(true);
+        }
+        
+        private void setTriggerTouchable(boolean touchable) {
+            try {
+                if (touchable) {
+                    if ((mTriggerPos.flags & WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE) != 0) {
+                        mTriggerPos.flags ^= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+                    }
+                } else {
+                    if ((mTriggerPos.flags & WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE) == 0) {
+                        mTriggerPos.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+                    }
+                }
+                mWindowManager.updateViewLayout(mRoot, mTriggerPos);
+            } catch (Exception e) {
+            }
         }
 
         CustomObjectAnimator contentYAnimator = new CustomObjectAnimator(this);
